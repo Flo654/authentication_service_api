@@ -1,22 +1,32 @@
 version: '3.7'
 services:
-    database:
+    mysql:
         image: 'mysql:latest'
+        container_name: authentication_service_mysql
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: adminTest
         ports:
-            # To allow the host machine to access the ports below, modify the lines below.
-            # For example, to allow the host to connect to port 3306 on the container, you would change
-            # "3306" to "3306:3306". Where the first port is exposed to the host and the second is the container port.
-            # See https://docs.docker.com/compose/compose-file/#ports for more information.
-            - '3306'
-    phpmyadmin:
+            - 33060:3306
+
+    php:
+        build: docker/php
+        container_name: authentication_service_php
+        working_dir: /app
+        volumes:
+            - ./:/app
+            - ~/.ssh:/root/.ssh
         depends_on:
-            - database
-        image: phpmyadmin
-        restart: always
+            - mysql
+
+    server:
+        image: nginx:latest
+        container_name: authentication_service_server
+        working_dir: /app
         ports:
-            - 8080:80
-        environment:
-            PMA_HOST: database
+            -  8001:80
+        volumes:
+            - ./:/app:cached
+            - ./docker/server/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
