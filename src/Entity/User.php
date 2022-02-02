@@ -12,7 +12,37 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    attributes: ["security" => "is_granted('ROLE_USER')"],
+    collectionOperations: [
+        "get"=> [
+            "security" => "is_granted('ROLE_ADMIN')",
+            "security_message" => "Only admins can get users.",
+        ],
+        "post" => [
+            "security" => "is_granted('ROLE_ADMIN')",
+            "security_message" => "Only admins can add users.",
+        ],
+    ],
+    itemOperations: [
+        "get" => [
+            "security" => "is_granted('ROLE_ADMIN')",
+            "security_message" => "Sorry, but you are not Admin.",
+        ],
+        "put" => [
+            "security_post_denormalize" => "is_granted('ROLE_ADMIN')",
+            "security_post_denormalize_message" => "Sorry, but you are not admin.",
+        ],
+        "patch" => [
+            "security_post_denormalize" => "is_granted('ROLE_ADMIN')",
+            "security_post_denormalize_message" => "Sorry, but you are not admin",
+        ],
+        "delete" => [
+            "security_post_denormalize" => "is_granted('ROLE_ADMIN')",
+            "security_post_denormalize_message" => "Sorry, but you are not admin",
+        ],
+    ],
+)]
 #[UniqueEntity('email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
